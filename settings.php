@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+    $description = new lang_string('description', 'assignsubmission_cincopa');
+    $settings->add(new admin_setting_heading('defaultsettings', '', $description));
 $settings->add(new admin_setting_configcheckbox('assignsubmission_cincopa/default',
                    new lang_string('default', 'assignsubmission_cincopa'),
                    new lang_string('default_help', 'assignsubmission_cincopa'), 0));

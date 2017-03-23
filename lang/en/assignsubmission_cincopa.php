@@ -32,3 +32,4 @@ $string['template_cincopa'] = 'Template';
 $string['template_cincopa_help'] = 'Gallery Template';
 $string['api_token_cincopa'] = 'Cincopa Api Token';
 $string['api_token_cincopa_help'] = 'Api token Cincopa account';
+$string['description'] = '<div style="margin:10px;padding:15px;background-color:#f5f5f5;border:2px solid #e3e3e3;"><img src="https://www.cincopa.com/_cms/design15/icons/favicon-32.png?affdata=moodle-plugin-assign,setup-page"> Welcome to Cincopa Moodle plugin, check our <a href="https://www.cincopa.com/moodle/welcome" target="_blank">welcome page</a> for registration and support documents.</div>';
