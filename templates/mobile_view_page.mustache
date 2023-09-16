@@ -1,0 +1,22 @@
+
+{{=<% %>=}}
+<div style="height: auto !important" id="mainDiv" *ngIf="!edit">
+    <div style="height: auto !important;" *ngIf="currentToken">
+        <div style="height: auto !important; width: 100%" *ngIf="hasAssignmentSubmitted">
+            <core-format-text component="mod_newmod" componentId="3" text="<iframe allowfullscreen src='https://rt.cincopa.com/iframe.aspx?fid=rrid:assign:{{assign.id}}:{{ submission.userid }}!{{ currentUID }}!<% template %>#cpoadd_text=title&cpolightbox_text=title and description&cpolightbox_video_autoplay=false' style='height: auto; min-height: 400px !important; width: 100%;'></iframe>" ></core-format-text>
+        </div>
+    </div>
+    <div style="height: auto !important;" *ngIf="!currentToken">
+        <div style="height: auto !important; width: 100%" *ngIf="hasAssignmentSubmitted">
+            <core-format-text component="mod_newmod" componentId="4" text="<iframe allowfullscreen src='https://rt.cincopa.com/iframe.aspx?fid=rrid:assign:{{assign.id}}:{{ submission.userid }}!<% uid %>!<% template %>#cpoadd_text=title&cpolightbox_text=title and description&cpolightbox_video_autoplay=false' style='height: auto; min-height: 400px !important; width: 100%;'></iframe>" ></core-format-text>
+        </div>
+    </div>
+</div>
+<div style="height: 400px" *ngIf="edit">
+    <div *ngIf="currentToken" style="height: 400px; width: 92%">
+        <core-format-text text="<iframe allowfullscreen width='92%' height='400' allow='microphone *; camera *; display-capture *' allowfullscreen name='iframeData' id='iframeData' style='height: 400px !important; width: 92% !important;' src='https://api.cincopa.com/v2/upload.iframe?api_token={{currentToken}}&rrid=assign:{{assign.id}}:{{ submission.userid }}&disable_mobile_app=true&disable-undo=true&view=<% view %>&allow={{allowedTypes}}&allowExtensions={{allowedExtension}}&disable_href=true'></iframe>" component="mod_newmod" componentId="1"></core-format-text>
+    </div>
+    <div *ngIf="!currentToken" style="height: 400px; width: 92%">
+        <core-format-text text="<iframe allowfullscreen width='92%' height='400' allow='microphone *; camera *; display-capture *' allowfullscreen name='iframeData' id='iframeData' style='height: 400px !important; width: 92% !important;' src='https://api.cincopa.com/v2/upload.iframe?api_token=<% token %>&rrid=assign:{{assign.id}}:{{ submission.userid }}&disable_mobile_app=true&disable-undo=true&view=<% view %>&allow={{allowedTypes}}&allowExtensions={{allowedExtension}}&disable_href=true'></iframe>" component="mod_newmod" componentId="2"></core-format-text>
+    </div>
+</div>

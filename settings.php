@@ -33,3 +33,4 @@ $settings->add(new admin_setting_configtext('assignsubmission_cincopa/template_c
 $settings->add(new admin_setting_configtext('assignsubmission_cincopa/api_token_cincopa',
                    new lang_string('api_token_cincopa', 'assignsubmission_cincopa'),
                    new lang_string('api_token_cincopa_help', 'assignsubmission_cincopa'), '', PARAM_TEXT));
+$settings->add(new admin_setting_configselect('assignsubmission_cincopa/submission_thumb_size_cincopa', 'Submission template thumbnail size', '', 'large', array('large' => 'large thumbnail', 'small' => 'smaller thumbnail', 'list' => 'show files as a list') ));

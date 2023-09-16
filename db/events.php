@@ -15,17 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains the version information for the cincopa submission plugin
+ * Events subscription.
  *
  * @package    assignsubmission_cincopa
- * @copyright  2017 Cincopa LTD <moodle@cincopa.com>
+ * @copyright  2015 Lancaster University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2023091500;		// The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires  = 2014051200;		// Requires this Moodle version.
-$plugin->component = 'assignsubmission_cincopa';	// Full name of the plugin (used for diagnostics).
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = 'v1.1.6';
+$observers = array(
+    array(
+        'eventname'   => '\mod_assign\event\submission_status_updated',
+        'callback'    => 'assignsubmission_cincopa_observers::submission_updated',
+    ),
+);
