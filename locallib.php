@@ -41,10 +41,28 @@ define('ASSIGNSUBMISSION_CINCOPA_FILEAREA', 'submissions_cincopa');
 
 class assign_submission_cincopa extends assign_submission_plugin
 {
+    static $uid;
     /**
      * Get the name of the cincopa submission plugin
      * @return string
      */
+    public function get_uid(){
+        if(!self::$uid) {
+            $defaultapitoken = get_config('assignsubmission_cincopa', 'api_token_cincopa');
+            if ($this->get_config('courseApiToken')) {
+                $defaultapitoken = $this->get_config('courseApiToken');
+            }
+    
+            $url = "https://api.cincopa.com/v2/ping.json?api_token=" . $defaultapitoken;
+            $result = file_get_contents($url);
+            if ($result) {
+                $result = json_decode($result, true);
+                self::$uid = $result['accid'];
+            }
+        }
+
+        return self::$uid;
+    }
     public function get_name()
     {
         return get_string('cincopa', 'assignsubmission_cincopa');
@@ -191,17 +209,17 @@ class assign_submission_cincopa extends assign_submission_plugin
      * @return string
      */
     public function view_summary(stdClass $submission, &$showviewlink)
-    {
+    {   
         $showviewlink = ($submission->status == 'submitted' || $submission->timemodified) ? true : false;
 
         $result = '';
-
+       
         $title = 'Gallery';
 
         if ($submission && ($submission->status == 'submitted' || $submission->timemodified)) {
-            $result .= $title;
-        } else {
-            $result = 'No Cincopa Submission';
+                                    $result .= $title;
+                            } else {
+                        $result = 'No Cincopa Submission';
         }
         return $result;
     }
@@ -221,15 +239,9 @@ class assign_submission_cincopa extends assign_submission_plugin
             $defaultapitoken = $this->get_config('courseApiToken');
         }
 
-        $url = "https://api.cincopa.com/v2/ping.json?api_token=" . $defaultapitoken;
-        $result = file_get_contents($url);
-        if ($result) {
-            $result = json_decode($result, true);
-            $uid = $result['accid'];
-        }
-
+        $uid = $this->get_uid();
         $iframeteacher = '<div id="deleteBox"></div><div id="cp_widget_1">...</div>
-                            <div id="recorderBox"></div> 
+                            <div id="recorderBox"><div id="recorderBox_title"></div><div id="recorderBox_recorder"></div></div> 
                             <script type="text/javascript"> 
                                 var url = new URL(location.href);
                                 var cpo = []; var token =  "'. $defaultapitoken .'"; var submissionStatus = "'.$submission->status.'";
@@ -256,6 +268,10 @@ class assign_submission_cincopa extends assign_submission_plugin
                                             gallery.args.lightbox_zoom_type = "mousewheel";
                                             gallery.args.lightbox_video_autoplay = false;
                                             gallery.args.optimize_load = "load_all";
+                                            if(url.searchParams.get("action") == "grader"){
+                                                gallery.args.showProcessingItems = true;
+                                                gallery.args.reloadForProcessing = true;
+                                            }                                            
                                         }, filter: "runtime.on-args"
                                     });
 
@@ -263,77 +279,81 @@ class assign_submission_cincopa extends assign_submission_plugin
                                         func: function (name, data, gallery) {
                                                 if(gallery && gallery.args && gallery.args.fid ) {
                                                     const fid = gallery.args.fid;
-                                                    var deleteButton = document.createElement("button");
-                                                    deleteButton.className = "btn btn-primary";
-                                                    deleteButton.innerText = "Delete Submission";
-                                                    deleteButton.style.marginBottom = "20px";
-                                                    deleteButton.style.outline = "none";
-                                                    document.getElementById("deleteBox").append(deleteButton);
+                                                    if(!document.querySelector(".delete_submission")){
+                                                        var deleteButton = document.createElement("button");
+                                                        deleteButton.className = "btn btn-primary delete_submission";
+                                                        deleteButton.innerText = "Delete Submission";
+                                                        deleteButton.style.marginBottom = "20px";
+                                                        deleteButton.style.outline = "none";
+                                                        document.getElementById("deleteBox").append(deleteButton);
 
-                                                    var confirmDeleteBlock = document.createElement("div");
-                                                    confirmDeleteBlock.className = "confirm-delete-block";                                        
-                                                    confirmDeleteBlock.style.marginBottom = "20px";
-                                                    confirmDeleteBlock.style.display = "none";
-                                                    confirmDeleteBlock.style.border = "1px solid #d6d6d6";
-                                                    confirmDeleteBlock.style.maxWidth = "360px";
-                                                    confirmDeleteBlock.style.padding = "20px";
-                                                    document.getElementById("deleteBox").append(confirmDeleteBlock);
-
-                                                    var confirmDeleteMessage = document.createElement("div");
-                                                    confirmDeleteMessage.innerText = "Are you sure you want to delete this gallery?";
-                                                    confirmDeleteMessage.style.marginBottom = "20px";
-                                                    confirmDeleteMessage.style.fontWeight = "700";
-                                                    confirmDeleteBlock.append(confirmDeleteMessage);
-
-                                                    var confirmDeleteYes = document.createElement("button");
-                                                    confirmDeleteYes.className = "btn btn-primary";
-                                                    confirmDeleteYes.innerText = "Yes";
-                                                    confirmDeleteBlock.append(confirmDeleteYes);
-
-                                                    var confirmDeleteNo = document.createElement("button");
-                                                    confirmDeleteNo.className = "btn btn-primary";
-                                                    confirmDeleteNo.innerText = "No";
-                                                    confirmDeleteNo.style.backgroundColor = "#db4c3f";
-                                                    confirmDeleteNo.style.borderColor = "#db4c3f";
-                                                    confirmDeleteNo.style.marginLeft = "10px";
-                                                    confirmDeleteBlock.append(confirmDeleteNo);
-
-                                                    deleteButton.onclick = async function() {
-                                                        confirmDeleteBlock.style.display = "block";
-                                                    }
-
-                                                    confirmDeleteNo.onclick = async function() {
+                                                        var confirmDeleteBlock = document.createElement("div");
+                                                        confirmDeleteBlock.className = "confirm-delete-block";                                        
+                                                        confirmDeleteBlock.style.marginBottom = "20px";
                                                         confirmDeleteBlock.style.display = "none";
-                                                    }
+                                                        confirmDeleteBlock.style.border = "1px solid #d6d6d6";
+                                                        confirmDeleteBlock.style.maxWidth = "360px";
+                                                        confirmDeleteBlock.style.padding = "20px";
+                                                        document.getElementById("deleteBox").append(confirmDeleteBlock);
 
-                                                    confirmDeleteYes.onclick = async function() {
-                                                        const deleteReq = await fetch("https://api.cincopa.com/v2/gallery.delete.json?api_token="+token+"&fid="+fid+"&delete_assets=yes");
-                                                        const deleteRes = await deleteReq.json();
-                                                        var oldHash = location.hash;
-                                                        location.hash = oldHash.indexOf("#") > -1 ? oldHash + "&purgecache" : "#purgecache";
-                                                        setTimeout(function(){
-                                                            location.reload();
-                                                        }, 1000);
+                                                        var confirmDeleteMessage = document.createElement("div");
+                                                        confirmDeleteMessage.innerText = "Are you sure you want to delete this gallery?";
+                                                        confirmDeleteMessage.style.marginBottom = "20px";
+                                                        confirmDeleteMessage.style.fontWeight = "700";
+                                                        confirmDeleteBlock.append(confirmDeleteMessage);
+
+                                                        var confirmDeleteYes = document.createElement("button");
+                                                        confirmDeleteYes.className = "btn btn-primary";
+                                                        confirmDeleteYes.innerText = "Yes";
+                                                        confirmDeleteBlock.append(confirmDeleteYes);
+
+                                                        var confirmDeleteNo = document.createElement("button");
+                                                        confirmDeleteNo.className = "btn btn-primary";
+                                                        confirmDeleteNo.innerText = "No";
+                                                        confirmDeleteNo.style.backgroundColor = "#db4c3f";
+                                                        confirmDeleteNo.style.borderColor = "#db4c3f";
+                                                        confirmDeleteNo.style.marginLeft = "10px";
+                                                        confirmDeleteBlock.append(confirmDeleteNo);
+
+                                                        deleteButton.onclick = async function() {
+                                                            confirmDeleteBlock.style.display = "block";
+                                                        }
+
+                                                        confirmDeleteNo.onclick = async function() {
+                                                            confirmDeleteBlock.style.display = "none";
+                                                        }
+
+                                                        confirmDeleteYes.onclick = async function() {
+                                                            const deleteReq = await fetch("https://api.cincopa.com/v2/gallery.delete.json?api_token="+token+"&fid="+fid+"&delete_assets=yes");
+                                                            const deleteRes = await deleteReq.json();
+                                                            var oldHash = location.hash;
+                                                            location.hash = oldHash.indexOf("#") > -1 ? oldHash + "&purgecache" : "#purgecache";
+                                                            setTimeout(function(){
+                                                                location.reload();
+                                                            }, 1000);
+                                                        }
                                                     }
                                                     
                                                     // Check if only in grader page
-                                                    return; // no need for this code now
-                                                    if(url.searchParams.get("action") == "grader") {
-                                                        const recorderBox = document.getElementById("recorderBox");
-                                                        recorderBox.innerHTML = "<br /><br /><h4>Recording</h4><h3>Grade your student\'s work by recording your screen, leave Notify student checkmark active so student will see new recording in his submission</h3><br /><br />"
+                                                    //return;
+                                                    if(url.searchParams.get("action") == "grader" && !window.isRecorderInit) {
+                                                        const recorderBox = document.getElementById("recorderBox_title");
+                                                        recorderBox.innerHTML = "<br /><br /><h4 class=\"cp_recording_title\">Recording</h4><h3>Grade your student\'s work by recording your screen, leave Notify student checkmark active so student will see new recording in his submission</h3><br /><br />"
                                                         const uploadScript = document.createElement("script");
                                                         uploadScript.src = "//wwwcdn.cincopa.com/_cms/ugc/uploaderUI.js";
                                                         c.parentNode.insertBefore(uploadScript, cp.nextSibling);
+
+                                                        const recorderBoxRecorder = document.getElementById("recorderBox_recorder");
 
                                                         uploadScript.onload = function() {
                                                             const recorderScript = document.createElement("script");
                                                             recorderScript.src = "//www.cincopa.com/_cms/ugc/v2/recorderui.js";
                                                             c.parentNode.insertBefore(recorderScript, uploadScript.nextSibling);
-
+                                                            var reloadTimer;
                                                             recorderScript.onload = function() {
-                                                                const uploadURL = res.galleries[0].upload_url;
+                                                                const uploadURL = gallery.args.upload_url.replace("&addtofid=*", "&addtofid="); //res.galleries[0].upload_url;
                                                                 console.log(uploadURL);
-                                                                const cpRecorder = new cpRecorderUI(recorderBox, {
+                                                                const cpRecorder = new cpRecorderUI(recorderBoxRecorder, {
                                                                     width: "400px",
                                                                     height: "400px",
                                                                     resolution: "480",
@@ -343,12 +363,32 @@ class assign_submission_cincopa extends assign_submission_plugin
                                                                     default_tab: "screen",
                                                                     upload_url: uploadURL,
                                                                     rectraceMode: true,
+                                                                    textRetake: "The video has been processed.",
+                                                                    textRetakeLink: "if you would like to delete and retake the video.",
                                                                     onUploadComplete: async function(e) {
                                                                         const rid = e.rid;
                                                                         const req = await fetch("https://api.cincopa.com/v2/asset.set_meta.json?api_token=" + token + "&rid=" + rid + "&caption=Teacher grade recording " + Date.now());
                                                                         const res = await req.json();
                                                                         console.log(res);
-                                                                    }
+                                                                        clearTimeout(reloadTimer);
+                                                                        reloadTimer = setTimeout(function(){
+                                                                            window.cincopa = window.cincopa || {};
+                                                                            window.cincopa.qs = window.cincopa.qs || {};
+                                                                            window.cincopa.qs["cpdebug"] = "purgecache";
+                                                                            window.cincopa.boot_gallery({"_object": "cp_widget_1" ,"_fid" : "rrid:assign:' . $cmid . ':' . $submission->userid . '!'.$uid.'!'.$defaulttemplate.'"});
+                                                                        },5000);
+                                                                    },
+                                                                    onDelete: async function(e){
+                                                                        var serverData = e.xhr.responseText;
+                                                                        var rid = serverData.split("\n")[5].split(" ")[3];
+                                                                        const deleteReq = await fetch("https://api.cincopa.com/v2/asset.delete.json?api_token="+token+"&rid="+rid);
+                                                                        const deleteRes = await deleteReq.json();
+                                                                        clearTimeout(reloadTimer);
+                                                                        window.cincopa = window.cincopa || {};
+                                                                        window.cincopa.qs = window.cincopa.qs || {};
+                                                                        window.cincopa.qs["cpdebug"] = "purgecache";
+                                                                        window.cincopa.boot_gallery({"_object": "cp_widget_1" ,"_fid" : "rrid:assign:' . $cmid . ':' . $submission->userid . '!'.$uid.'!'.$defaulttemplate.'"});
+                                                                    },
                                                                 });
                                                                 console.log(cpRecorder);
                                                                 window.isRecorderInit = false;
