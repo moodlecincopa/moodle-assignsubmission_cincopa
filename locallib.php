@@ -235,6 +235,8 @@ class assign_submission_cincopa extends assign_submission_plugin
         $cmid = $submission->assignment;
         $defaultapitoken = get_config('assignsubmission_cincopa', 'api_token_cincopa');
         $defaulttemplate = get_config('assignsubmission_cincopa', 'template_cincopa');
+        $enabled_recording = get_config('assignsubmission_cincopa', 'enabled_recording');
+        
         if ($this->get_config('courseApiToken')) {
             $defaultapitoken = $this->get_config('courseApiToken');
         }
@@ -244,6 +246,7 @@ class assign_submission_cincopa extends assign_submission_plugin
                             <div id="recorderBox"><div id="recorderBox_title"></div><div id="recorderBox_recorder"></div></div> 
                             <script type="text/javascript"> 
                                 var url = new URL(location.href);
+                                 var enabled_recording = "'.($enabled_recording ? 'true' : 'false').'";
                                 var cpo = []; var token =  "'. $defaultapitoken .'"; var submissionStatus = "'.$submission->status.'";
                                 cpo["_object"] ="cp_widget_1"; 
                                 cpo["_fid"] = "rrid:assign:' . $cmid . ':' . $submission->userid . '!'.$uid.'!'.$defaulttemplate.'";
@@ -268,7 +271,7 @@ class assign_submission_cincopa extends assign_submission_plugin
                                             gallery.args.lightbox_zoom_type = "mousewheel";
                                             gallery.args.lightbox_video_autoplay = false;
                                             gallery.args.optimize_load = "load_all";
-                                            if(url.searchParams.get("action") == "grader"){
+                                            if(url.searchParams.get("action") == "grader" && enabled_recording == "true"){
                                                 gallery.args.showProcessingItems = true;
                                                 gallery.args.reloadForProcessing = true;
                                             }                                            
@@ -336,7 +339,7 @@ class assign_submission_cincopa extends assign_submission_plugin
                                                     
                                                     // Check if only in grader page
                                                     //return;
-                                                    if(url.searchParams.get("action") == "grader" && !window.isRecorderInit) {
+                                                    if(url.searchParams.get("action") == "grader" && !window.isRecorderInit && enabled_recording == "true") {
                                                         const recorderBox = document.getElementById("recorderBox_title");
                                                         recorderBox.innerHTML = "<br /><br /><h4 class=\"cp_recording_title\">Recording</h4><h3>Grade your student\'s work by recording your screen, leave Notify student checkmark active so student will see new recording in his submission</h3><br /><br />"
                                                         const uploadScript = document.createElement("script");
